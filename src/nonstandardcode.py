@@ -1,12 +1,8 @@
-import os
-import tarfile
-
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import randint
-from six.moves import urllib
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
@@ -15,36 +11,25 @@ from sklearn.model_selection import (
     GridSearchCV,
     RandomizedSearchCV,
     StratifiedShuffleSplit,
-    train_test_split,
 )
 from sklearn.tree import DecisionTreeRegressor
+from src.ingest_data import load_housing_data, train_test_after_income_cat
+import argparse
+import pickle
+from src.train import train_model_imputer
+from src.score import get_scores
+import matplotlib
 
-DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
-HOUSING_PATH = os.path.join("datasets", "housing")
-HOUSING_URL = DOWNLOAD_ROOT + "datasets/housing/housing.tgz"
+matplotlib.use("TKAgg")
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-v", "--verbose", help="increase output verbosity", action="store_true"
+)
+args = parser.parse_args()
 
-def fetch_housing_data(housing_url=HOUSING_URL, housing_path=HOUSING_PATH):
-    os.makedirs(housing_path, exist_ok=True)
-    tgz_path = os.path.join(housing_path, "housing.tgz")
-    urllib.request.urlretrieve(housing_url, tgz_path)
-    housing_tgz = tarfile.open(tgz_path)
-    housing_tgz.extractall(path=housing_path)
-    housing_tgz.close()
+housing, train_set, test_set = load_housing_data()
 
-
-fetch_housing_data()
-
-
-def load_housing_data(housing_path=HOUSING_PATH):
-    csv_path = os.path.join(housing_path, "housing.csv")
-    return pd.read_csv(csv_path)
-
-
-housing = load_housing_data(HOUSING_PATH)
-
-
-train_set, test_set = train_test_split(housing, test_size=0.2, random_state=42)
 
 housing["income_cat"] = pd.cut(
     housing["median_income"],
@@ -58,12 +43,12 @@ for train_index, test_index in split.split(housing, housing["income_cat"]):
     strat_train_set = housing.loc[train_index]
     strat_test_set = housing.loc[test_index]
 
+train_set, test_set = train_test_after_income_cat(housing)
+
 
 def income_cat_proportions(data):
     return data["income_cat"].value_counts() / len(data)
 
-
-train_set, test_set = train_test_split(housing, test_size=0.2, random_state=42)
 
 compare_props = pd.DataFrame(
     {
@@ -103,8 +88,8 @@ imputer = SimpleImputer(strategy="median")
 
 housing_num = housing.drop("ocean_proximity", axis=1)
 
-imputer.fit(housing_num)
-X = imputer.transform(housing_num)
+train_model_imputer(imputer, housing_num)
+X = pickle.load(open("models/imputer.sav", "rb"))
 
 housing_tr = pd.DataFrame(X, columns=housing_num.columns, index=housing.index)
 rooms_p_household = housing_tr["total_rooms"] / housing_tr["households"]
@@ -159,8 +144,7 @@ rnd_search = RandomizedSearchCV(
 )
 rnd_search.fit(housing_prepared, housing_labels)
 cvres = rnd_search.cv_results_
-for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
-    print(np.sqrt(-mean_score), params)
+get_scores(cvres)
 
 
 param_grid = [
@@ -183,8 +167,7 @@ grid_search.fit(housing_prepared, housing_labels)
 
 grid_search.best_params_
 cvres = grid_search.cv_results_
-for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
-    print(np.sqrt(-mean_score), params)
+get_scores(cvres)
 
 feature_importances = grid_search.best_estimator_.feature_importances_
 sorted(zip(feature_importances, housing_prepared.columns), reverse=True)
