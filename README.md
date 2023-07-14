@@ -17,11 +17,11 @@ The following techniques have been used:
  - All the above said modelling techniques are tried and evaluated. The final metric used to evaluate is mean squared error.
 
 ## Conda Environment
-conda config --append channels conda-forge # set conda-forgre channel active
-conda env export --no-builds > env.yml #export conda environment one which is active in  env.yml file
-conda env create -f env.yml # create the environment using env.yml file
+    conda config --append channels conda-forge # set conda-forgre channel active
+    conda env export --no-builds > env.yml #export conda environment one which is active in  env.yml file
+    conda env create -f env.yml # create the environment using env.yml file
 
 
 ## To excute the script
-export QT_QPA_PLATFORM=offscreen
-python nonstandardcode.py
+    export QT_QPA_PLATFORM=offscreen
+    python src/nonstandardcode.py
