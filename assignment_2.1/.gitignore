@@ -1,0 +1,5 @@
+*.pyc
+*.csv
+*.tgz
+.vscode
+.mypackage.egg-info
