@@ -1,0 +1,14 @@
+LICENCE
+README.md
+pyproject.toml
+setup.py
+src/mlflow/mlflow_code.py
+src/shantanuyadav/__init__.py
+src/shantanuyadav/ingest_data.py
+src/shantanuyadav/score.py
+src/shantanuyadav/train.py
+src/shantanuyadav.egg-info/PKG-INFO
+src/shantanuyadav.egg-info/SOURCES.txt
+src/shantanuyadav.egg-info/dependency_links.txt
+src/shantanuyadav.egg-info/requires.txt
+src/shantanuyadav.egg-info/top_level.txt
